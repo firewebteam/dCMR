@@ -26,6 +26,7 @@ class Dcmr():
             keys.append(key)
         self.parts = list(zip(self.parts, keys))
 
+    def keys_out(self):
         '''sending private keys via email'''
         for i in self.parts:
             print(i)
@@ -51,10 +52,11 @@ class Dcmr():
         output.write(str(msg))
 
     def update_block(self):
-        #by ChainSign
+        '''updating waybill blockchain (wallet) with any box_no:value pair - using ChainSign'''
         pass
 
     def let_send(self):
+        '''executable function'''
         self.load_data()
         self.get_keys()
         signed_msg = self.signing(self.parts[0][1], "ecmr.json")
@@ -68,5 +70,5 @@ class Dcmr():
             self.parts.append(self.cmr_file[i][2])
 
 
-c = Dcmr('ecmr.json', 'smtp.txt')
+c = Dcmr('dCMR\ecmr.json', 'dCMR\smtp.txt')
 c.let_send()
