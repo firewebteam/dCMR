@@ -8,7 +8,7 @@ from email.mime.text import MIMEText
 class Dcmr():
     def __init__(self, file_path, host_address):
         self.parts = []
-        data = open(file_path, 'r')
+        data = open(file_path).read()
         self.cmr_file = json.load(data)
         self.host = open(host_address).read()
 
@@ -27,7 +27,8 @@ class Dcmr():
         self.parts = list(zip(self.parts, keys))
 
     def keys_out(self):
-        '''sending private keys via email'''
+        '''sending private keys via email; smtp adress is taken from file smtp.txt - few most popular smtps
+        will be defined there in the future'''
         for i in self.parts:
             print(i)
             if not i == self.parts[0]:
@@ -35,34 +36,33 @@ class Dcmr():
                 mail['Subject'] = 'Your private key to CMR waybill no. %s' % self.cmr_file[0]
                 mail['From'] = self.parts[0][0]
                 mail['To'] = i[0]
-                s = smtplib.SMTP(self.host)
-                s.starttls()
-                s.login(self.parts[0][0], input('email password: '))
-                s.send_message(mail)
-                s.quit()
+                server = smtplib.SMTP(self.host)
+                server.starttls()
+                server.login(self.parts[0][0], input('email password: '))
+                server.send_message(mail)
+                server.quit()
 
     def signing(self, signer, file_path):
-        '''signing waybill with private key'''
+        '''signing waybill with private key and exoporting as .txt file'''
         message = pgpy.PGPMessage.new(file_path, file=True)
         message |= signer.sign(message)
+        output = open("sender_pgp_msg.txt", "w")
+        output.write(str(message))
         return message
 
-    def export_pgp_msg(self, msg):
-        output = open("sender_pgp_msg.txt", "w")
-        output.write(str(msg))
-
-    def update_block(self):
+    def update_block(self, up_file):
         '''updating waybill blockchain (wallet) with any box_no:value pair - using ChainSign'''
+        changes = json.load(up_file)
+        #here we use ChainSign to timestamp update and commit it (add to blockchain)
         pass
 
     def let_send(self):
         '''executable function'''
         self.load_data()
         self.get_keys()
-        signed_msg = self.signing(self.parts[0][1], "ecmr.json")
+        self.signing(self.parts[0][1], "ecmr.json")
         self.keys_out()
-        self.export_pgp_msg(signed_msg)
-        self.update_block()
+        self.update_block(open('dCMR\changes.json'))
 
     def load_data(self):
         adresses = [1, 2, 16]
@@ -70,5 +70,5 @@ class Dcmr():
             self.parts.append(self.cmr_file[i][2])
 
 
-c = Dcmr('dCMR\ecmr.json', 'dCMR\smtp.txt')
+c = Dcmr("formatka.json", 'smtp.txt')
 c.let_send()
