@@ -8,12 +8,12 @@ from email.mime.text import MIMEText
 class Dcmr():
     def __init__(self, file_path, host_address):
         self.parts = []
-        data = open(file_path).read()
+        data = open(file_path, 'r')
         self.cmr_file = json.load(data)
         self.host = open(host_address).read()
 
     def get_keys(self):
-        '''genarating private keys using PGP'''
+        '''genarating private keys using PGP and add '''
         keys = []
         for i in self.parts:
             key = pgpy.PGPKey.new(PubKeyAlgorithm.RSAEncryptOrSign, 512)
@@ -61,14 +61,15 @@ class Dcmr():
         self.load_data()
         self.get_keys()
         self.signing(self.parts[0][1], "ecmr.json")
+        self.update_block(open('changes.json'))
         self.keys_out()
-        self.update_block(open('dCMR\changes.json'))
 
     def load_data(self):
-        adresses = [1, 2, 16]
-        for i in adresses:
+        '''gathering all participants email addresses (Sender, Consignee, Carrier) together'''
+        box_no = [1, 2, 16]
+        for i in box_no:
             self.parts.append(self.cmr_file[i][2])
 
 
-c = Dcmr("formatka.json", 'smtp.txt')
+c = Dcmr("ecmr.json", 'smtp.txt')
 c.let_send()
