@@ -1,0 +1,6 @@
+TIMESTAMPER
+
+nie potrafi znaleźć pliku w historii transakcji
+	może to być spowodowane brakiem transakcji -zrobić transakcje-
+	czego on tak naprawdę szuka w tych transakcjach, tx o takim samym czym??? -z kodu-
+	do czego dokładnie służy ten timestamper? dodaje parametr czasu do tx'a? -uściślić-
