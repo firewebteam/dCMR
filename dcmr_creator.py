@@ -27,7 +27,7 @@ class Dcmr():
         self.parts = list(zip(self.parts, keys))
 
     def keys_out(self):
-        '''sending private keys via email; smtp adress is taken from file smtp.txt - few most popular smtps
+        '''sending private PGP keys via email; smtp adress is taken from file smtp.txt - few most popular smtps
         will be defined there in the future'''
         for i in self.parts:
             print(i)
