@@ -13,7 +13,7 @@ class Dcmr():
         self.host = open(host_address).read()
 
     def get_keys(self):
-        '''genarating private keys using PGP and add '''
+        '''genarating private keys using PGP and add keys to participants in self.parts list'''
         keys = []
         for i in self.parts:
             key = pgpy.PGPKey.new(PubKeyAlgorithm.RSAEncryptOrSign, 512)
