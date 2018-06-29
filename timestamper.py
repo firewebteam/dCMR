@@ -142,7 +142,7 @@ def rpcurl_from_config(coin, default=None, config_path=None):
 def main():
     ts = NamecoinTimestamper(rpcurl_from_config('namecoin', 'http://127.0.0.1:8336/'))
     print(sys.argv)
-    for f in sys.argv[1:]:
+    for f in ['changes.json']: #sys.argv[1:]:
         with open(f) as fd:
             timestamp = ts.verify(fd)
 

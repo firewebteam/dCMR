@@ -3,6 +3,7 @@ from pgpy.constants import PubKeyAlgorithm, KeyFlags, HashAlgorithm, SymmetricKe
 import json
 import smtplib
 from email.mime.text import MIMEText
+import os
 
 
 class Dcmr():
@@ -42,26 +43,30 @@ class Dcmr():
                 server.send_message(mail)
                 server.quit()
 
-    def signing(self, signer, file_path):
+    def signing(self, signer, file_path, output_path="sender_pgp_msg.txt"):
         '''signing waybill with private key and exoporting as .txt file'''
         message = pgpy.PGPMessage.new(file_path, file=True)
         message |= signer.sign(message)
-        output = open("sender_pgp_msg.txt", "w")
+        output = open(output_path, "w")
         output.write(str(message))
         return message
 
     def update_block(self, up_file):
         '''updating waybill blockchain (wallet) with any box_no:value pair - using ChainSign'''
-        changes = json.load(up_file)
-        #here we use ChainSign to timestamp update and commit it (add to blockchain)
-        pass
+        signer = self.parts[0][1]
+        self.signing(signer, up_file, output_path=up_file)
+        try:
+            os.system('py -3.4 timestamper.py changes.json')
+            return print('jupi! CS works')
+        except:
+            print('connection with CS failed')
 
     def let_send(self):
         '''executable function'''
         self.load_data()
         self.get_keys()
         self.signing(self.parts[0][1], "ecmr.json")
-        self.update_block(open('changes.json'))
+        self.update_block('changes.json')
         self.keys_out()
 
     def load_data(self):
