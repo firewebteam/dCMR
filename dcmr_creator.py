@@ -65,7 +65,7 @@ class Dcmr():
 
 def main():
     '''executable function'''
-    wbill = Dcmr("ecmr.json", 'smtp.txt')
+    wbill = Dcmr("ecmr.json", 'config.txt')
     wbill.load_data()
     wbill.get_keys()
     wbill.export_key()
