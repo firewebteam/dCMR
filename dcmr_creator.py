@@ -2,8 +2,6 @@ import pgpy
 from pgpy.constants import PubKeyAlgorithm, KeyFlags, HashAlgorithm, SymmetricKeyAlgorithm, CompressionAlgorithm
 import json
 import smtplib
-from email.mime.text import MIMEText
-import os
 
 
 class Dcmr():
@@ -11,7 +9,7 @@ class Dcmr():
         self.parts = []
         data = open(file_path, 'r')
         self.cmr_file = json.load(data)
-        self.host = open(host_address).read()
+        self.host = (open(host_address).read().split(";"))[0]
 
     def get_keys(self):
         '''genarating private keys using PGP and add keys to participants in self.parts list'''
@@ -27,21 +25,28 @@ class Dcmr():
             keys.append(key)
         self.parts = list(zip(self.parts, keys))
 
+    def export_key(self, path='config.txt'):
+        '''exporitng priv_key to config.txt file, we will use it for i.e. signing updates'''
+        config = open(path, "a")
+        exp = ";\n" + str(self.parts[0][1])
+        config.write(exp)
+
     def keys_out(self):
         '''sending private PGP keys via email; smtp adress is taken from file smtp.txt - few most popular smtps
         will be defined there in the future'''
         for i in self.parts:
-            print(i)
             if not i == self.parts[0]:
-                mail = MIMEText(str(i[1]))
-                mail['Subject'] = 'Your private key to CMR waybill no. %s' % self.cmr_file[0]
-                mail['From'] = self.parts[0][0]
-                mail['To'] = i[0]
-                server = smtplib.SMTP(self.host)
-                server.starttls()
-                server.login(self.parts[0][0], input('email password: '))
-                server.send_message(mail)
-                server.quit()
+                content = str(i[1])
+                username = self.parts[0][0]
+                receiver = i[0]
+
+                mail = smtplib.SMTP(self.host, 587)
+                mail.ehlo()
+                mail.starttls()
+                mail.login(username, input('Email password: '))
+
+                mail.sendmail(username, receiver, content)
+                mail.close()
 
     def signing(self, signer, file_path, output_path="sender_pgp_msg.txt"):
         '''signing waybill with private key and exoporting as .txt file'''
@@ -51,24 +56,6 @@ class Dcmr():
         output.write(str(message))
         return message
 
-    def update_block(self, up_file):
-        '''updating waybill blockchain (wallet) with any box_no:value pair - using ChainSign'''
-        signer = self.parts[0][1]
-        self.signing(signer, up_file, output_path=up_file)
-        try:
-            os.system('py -3.4 timestamper.py changes.json')
-            return print('jupi! CS works')
-        except:
-            print('connection with CS failed')
-
-    def let_send(self):
-        '''executable function'''
-        self.load_data()
-        self.get_keys()
-        self.signing(self.parts[0][1], "ecmr.json")
-        self.update_block('changes.json')
-        self.keys_out()
-
     def load_data(self):
         '''gathering all participants email addresses (Sender, Consignee, Carrier) together'''
         box_no = [1, 2, 16]
@@ -76,5 +63,15 @@ class Dcmr():
             self.parts.append(self.cmr_file[i][2])
 
 
-c = Dcmr("ecmr.json", 'smtp.txt')
-c.let_send()
+def main():
+    '''executable function'''
+    wbill = Dcmr("ecmr.json", 'smtp.txt')
+    wbill.load_data()
+    wbill.get_keys()
+    wbill.export_key()
+    wbill.signing(wbill.parts[0][1], "ecmr.json")
+    wbill.keys_out()
+
+
+if __name__ == '__main__':
+    main()
